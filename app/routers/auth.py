@@ -38,7 +38,7 @@ async def auth_status(request: Request):
     }
 
 @router.post("/setup")
-async def setup_admin(data: SetupRequest, response: Response):
+async def setup_admin(data: SetupRequest, request: Request, response: Response):
     """Initial one-time onboarding wizard to configure the master administrator."""
     if has_users():
         raise HTTPException(
@@ -55,6 +55,7 @@ async def setup_admin(data: SetupRequest, response: Response):
         )
 
     # Automatically log in the freshly created administrator
+    is_https = (request.url.scheme == "https") or (request.headers.get("x-forwarded-proto") == "https") or USE_SSL
     token = create_access_token({"sub": data.username})
     response.set_cookie(
         key=COOKIE_NAME,
@@ -62,13 +63,13 @@ async def setup_admin(data: SetupRequest, response: Response):
         httponly=True,
         max_age=ACCESS_TOKEN_EXPIRE_MINUTES * 60,
         samesite="lax",
-        secure=USE_SSL,
+        secure=is_https,
         path="/"
     )
     return {"message": "Administrator account successfully configured.", "username": data.username}
 
 @router.post("/login")
-async def login(data: LoginRequest, response: Response):
+async def login(data: LoginRequest, request: Request, response: Response):
     """Authenticate administrator and issue session cookie."""
     if not has_users():
         raise HTTPException(
@@ -83,6 +84,7 @@ async def login(data: LoginRequest, response: Response):
             detail="Invalid username or password."
         )
 
+    is_https = (request.url.scheme == "https") or (request.headers.get("x-forwarded-proto") == "https") or USE_SSL
     token = create_access_token({"sub": user["username"]})
     response.set_cookie(
         key=COOKIE_NAME,
@@ -90,7 +92,7 @@ async def login(data: LoginRequest, response: Response):
         httponly=True,
         max_age=ACCESS_TOKEN_EXPIRE_MINUTES * 60,
         samesite="lax",
-        secure=USE_SSL,
+        secure=is_https,
         path="/"
     )
     return {"message": "Login successful.", "username": user["username"]}
