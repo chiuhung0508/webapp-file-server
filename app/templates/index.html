@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Files - Webapp File Server</title>
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  
+  <!-- CodeMirror CSS & Themes -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/material-darker.min.css">
+  
+  <!-- CodeMirror Core JS & Modes -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/python/python.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/javascript/javascript.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/markdown/markdown.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/xml/xml.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/css/css.min.css"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/htmlmixed/htmlmixed.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/yaml/yaml.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/shell/shell.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/sql/sql.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/clike/clike.min.js"></script>
+
+  <link rel="stylesheet" href="/static/css/app.css">
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col antialiased selection:bg-indigo-500 selection:text-white">
+
+  <!-- Top Navigation Bar -->
+  <header class="sticky top-0 z-30 bg-slate-900/90 backdrop-blur border-b border-slate-800 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
+      <!-- Brand & Mobile Title -->
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-indigo-600/20 text-indigo-400 border border-indigo-500/30 flex items-center justify-center shadow-md">
+          <i class="fa-solid fa-server text-xl"></i>
+        </div>
+        <div>
+          <span class="font-bold text-lg text-white tracking-tight hidden sm:inline">Webapp File Server</span>
+          <span class="font-bold text-lg text-white tracking-tight sm:hidden">Files</span>
+          <span class="text-xs bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded-full ml-1.5 font-medium">HTTPS</span>
+        </div>
+      </div>
+
+      <!-- Quick Search & User Actions -->
+      <div class="flex items-center gap-2 sm:gap-4">
+        <!-- Search filter -->
+        <div class="relative hidden md:block w-48 lg:w-64">
+          <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+            <i class="fa-solid fa-magnifying-glass text-xs"></i>
+          </span>
+          <input type="text" id="searchInput" placeholder="Filter files..."
+            class="w-full pl-8 pr-3 py-1.5 text-sm bg-slate-800/80 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-indigo-500">
+        </div>
+
+        <!-- User info & Logout -->
+        <div class="flex items-center gap-2 pl-2 sm:border-l sm:border-slate-800">
+          <div class="hidden sm:flex items-center gap-2 text-sm text-slate-300">
+            <i class="fa-regular fa-user-circle text-lg text-indigo-400"></i>
+            <span id="userBadge" class="font-medium">Admin</span>
+          </div>
+          <button id="logoutBtn" title="Logout"
+            class="p-2 sm:px-3 sm:py-1.5 text-xs font-medium text-slate-300 hover:text-white bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg transition flex items-center gap-1.5">
+            <i class="fa-solid fa-arrow-right-from-bracket"></i>
+            <span class="hidden sm:inline">Logout</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 flex flex-col gap-4">
+
+    <!-- Action Bar & Breadcrumbs -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 bg-slate-900/60 p-3 sm:p-4 rounded-xl border border-slate-800/80">
+      
+      <!-- Breadcrumb trail -->
+      <nav class="flex items-center space-x-1 sm:space-x-2 text-sm overflow-x-auto py-1 scrollbar-none" id="breadcrumbNav">
+        <button class="text-indigo-400 hover:text-indigo-300 font-medium flex items-center gap-1.5" onclick="navigateTo('')">
+          <i class="fa-solid fa-house text-xs"></i>
+          <span>Home</span>
+        </button>
+      </nav>
+
+      <!-- Action buttons -->
+      <div class="flex items-center gap-2 flex-wrap">
+        <!-- Hidden file input for uploads -->
+        <input type="file" id="fileUploadInput" multiple class="hidden">
+        
+        <button id="uploadBtn"
+          class="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs sm:text-sm font-medium rounded-lg shadow-md shadow-indigo-600/20 flex items-center gap-2 transition">
+          <i class="fa-solid fa-cloud-arrow-up"></i>
+          <span>Upload</span>
+        </button>
+
+        <button id="newFolderBtn"
+          class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs sm:text-sm font-medium border border-slate-700 rounded-lg flex items-center gap-1.5 transition">
+          <i class="fa-solid fa-folder-plus text-amber-400"></i>
+          <span>New Folder</span>
+        </button>
+
+        <button id="newFileBtn"
+          class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs sm:text-sm font-medium border border-slate-700 rounded-lg flex items-center gap-1.5 transition">
+          <i class="fa-solid fa-file-circle-plus text-sky-400"></i>
+          <span>New File</span>
+        </button>
+
+        <button id="downloadZipBtn" title="Download folder as .zip"
+          class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs sm:text-sm font-medium border border-slate-700 rounded-lg flex items-center gap-1.5 transition">
+          <i class="fa-solid fa-file-zipper text-purple-400"></i>
+          <span class="hidden sm:inline">Download Zip</span>
+        </button>
+
+        <!-- View mode toggle -->
+        <div class="hidden sm:flex items-center bg-slate-800 rounded-lg border border-slate-700 p-0.5 ml-auto">
+          <button id="listViewBtn" class="p-1.5 text-xs text-white bg-slate-700 rounded transition" title="List View">
+            <i class="fa-solid fa-list"></i>
+          </button>
+          <button id="gridViewBtn" class="p-1.5 text-xs text-slate-400 hover:text-white rounded transition" title="Grid View">
+            <i class="fa-solid fa-table-cells"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Active Directory Stats & Filter info -->
+    <div class="flex items-center justify-between text-xs text-slate-400 px-1">
+      <span id="itemCountLabel">Loading items...</span>
+      <span id="storagePathLabel" class="font-mono text-slate-500 truncate max-w-xs sm:max-w-md">/</span>
+    </div>
+
+    <!-- File Explorer Content Area -->
+    <div id="fileExplorerContainer" class="flex-1 bg-slate-900/40 rounded-xl border border-slate-800/80 overflow-hidden relative min-h-[350px]">
+      
+      <!-- Table View -->
+      <div id="fileTableView" class="overflow-x-auto w-full">
+        <table class="w-full text-left text-sm text-slate-300">
+          <thead class="bg-slate-800/60 text-slate-400 text-xs uppercase font-medium border-b border-slate-800">
+            <tr>
+              <th scope="col" class="py-3 px-4">Name</th>
+              <th scope="col" class="py-3 px-4 hidden sm:table-cell w-32">Size</th>
+              <th scope="col" class="py-3 px-4 hidden md:table-cell w-48">Modified</th>
+              <th scope="col" class="py-3 px-4 text-right w-36">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="fileTableBody" class="divide-y divide-slate-800/50">
+            <!-- Dynamically populated rows -->
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Grid View (Hidden by default) -->
+      <div id="fileGridView" class="hidden p-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4">
+        <!-- Dynamically populated cards -->
+      </div>
+
+      <!-- Empty directory placeholder -->
+      <div id="emptyPlaceholder" class="hidden flex-col items-center justify-center p-12 text-center">
+        <div class="w-16 h-16 rounded-2xl bg-slate-800 text-slate-500 flex items-center justify-center text-3xl mb-3">
+          <i class="fa-regular fa-folder-open"></i>
+        </div>
+        <h3 class="text-slate-300 font-medium">This folder is empty</h3>
+        <p class="text-slate-500 text-xs mt-1">Drag and drop files here or click Upload.</p>
+      </div>
+
+      <!-- Loading Spinner -->
+      <div id="loadingOverlay" class="absolute inset-0 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center z-10 hidden">
+        <div class="flex flex-col items-center gap-2 text-indigo-400">
+          <i class="fa-solid fa-circle-notch fa-spin text-3xl"></i>
+          <span class="text-sm font-medium text-slate-300">Loading files...</span>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Drag & Drop Fullscreen Overlay -->
+  <div id="dropZoneOverlay" class="fixed inset-0 bg-indigo-950/80 backdrop-blur-md z-50 flex flex-col items-center justify-center border-4 border-dashed border-indigo-400 m-4 rounded-3xl pointer-events-none opacity-0 transition-opacity duration-200">
+    <div class="w-20 h-20 rounded-3xl bg-indigo-600/30 text-indigo-400 border border-indigo-500/40 flex items-center justify-center text-4xl mb-4 shadow-xl">
+      <i class="fa-solid fa-cloud-arrow-up animate-bounce"></i>
+    </div>
+    <h2 class="text-2xl font-bold text-white">Drop files to upload</h2>
+    <p id="dropTargetLabel" class="text-indigo-200 text-sm mt-1">Uploading to current folder</p>
+  </div>
+
+  <!-- In-Browser Text Editor Modal (CodeMirror) -->
+  <div id="editorModal" class="fixed inset-0 z-40 bg-slate-950/80 backdrop-blur-sm hidden flex flex-col p-2 sm:p-4">
+    <div class="bg-slate-900 border border-slate-700/80 rounded-2xl shadow-2xl flex-1 flex flex-col overflow-hidden max-w-6xl w-full mx-auto">
+      
+      <!-- Editor Header -->
+      <div class="h-14 bg-slate-850 px-4 flex items-center justify-between border-b border-slate-800 gap-2">
+        <div class="flex items-center gap-2 min-w-0">
+          <i class="fa-regular fa-file-code text-indigo-400 text-lg"></i>
+          <span id="editorFilename" class="font-medium text-white truncate text-sm sm:text-base">untitled.txt</span>
+          <span id="editorDirtyBadge" class="hidden text-xs bg-amber-500/20 text-amber-300 border border-amber-500/30 px-2 py-0.5 rounded-full">Modified</span>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <!-- Language Mode Selector -->
+          <select id="editorModeSelect" class="bg-slate-800 border border-slate-700 text-slate-300 text-xs rounded-lg px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-indigo-500 hidden sm:block">
+            <option value="plain">Plain Text</option>
+            <option value="markdown">Markdown</option>
+            <option value="python">Python</option>
+            <option value="javascript">JavaScript</option>
+            <option value="json">JSON</option>
+            <option value="yaml">YAML</option>
+            <option value="html">HTML</option>
+            <option value="css">CSS</option>
+            <option value="shell">Shell Script</option>
+            <option value="sql">SQL</option>
+          </select>
+
+          <!-- Save Button -->
+          <button id="editorSaveBtn"
+            class="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs sm:text-sm font-medium rounded-lg flex items-center gap-1.5 shadow transition">
+            <i class="fa-solid fa-floppy-disk"></i>
+            <span>Save</span>
+            <span class="hidden md:inline text-[10px] opacity-70">(Ctrl+S)</span>
+          </button>
+
+          <!-- Close Editor Button -->
+          <button id="editorCloseBtn"
+            class="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition" title="Close Editor">
+            <i class="fa-solid fa-xmark text-lg"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- CodeMirror Editor Area -->
+      <div class="flex-1 relative overflow-hidden" id="editorContainer">
+        <!-- CodeMirror attached here -->
+      </div>
+
+      <!-- Editor Footer Status Bar -->
+      <div class="h-8 bg-slate-950 px-4 flex items-center justify-between text-xs text-slate-400 border-t border-slate-800">
+        <span id="editorStatusText">Ready</span>
+        <span id="editorCursorPosition">Line 1, Col 1</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Generic Prompt / Confirm Modal -->
+  <div id="actionModal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-700 rounded-2xl p-6 max-w-sm w-full shadow-2xl">
+      <h3 id="modalTitle" class="text-lg font-bold text-white mb-2">Prompt</h3>
+      <p id="modalDescription" class="text-sm text-slate-400 mb-4">Description text</p>
+      
+      <div id="modalInputContainer" class="mb-4">
+        <input type="text" id="modalInput"
+          class="w-full px-3.5 py-2 bg-slate-800 border border-slate-700 rounded-xl text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+      </div>
+
+      <div class="flex items-center justify-end gap-2">
+        <button id="modalCancelBtn" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm font-medium rounded-xl transition">
+          Cancel
+        </button>
+        <button id="modalConfirmBtn" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium rounded-xl transition">
+          Confirm
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Upload Progress Toast -->
+  <div id="uploadToast" class="fixed bottom-4 right-4 z-50 bg-slate-900 border border-slate-700 rounded-2xl p-4 shadow-2xl max-w-xs w-full hidden transition-all">
+    <div class="flex items-center justify-between mb-2">
+      <div class="flex items-center gap-2 text-sm font-medium text-white">
+        <i class="fa-solid fa-cloud-arrow-up text-indigo-400"></i>
+        <span id="uploadToastTitle">Uploading...</span>
+      </div>
+      <button onclick="document.getElementById('uploadToast').classList.add('hidden')" class="text-slate-400 hover:text-white">
+        <i class="fa-solid fa-xmark text-xs"></i>
+      </button>
+    </div>
+    <div class="w-full bg-slate-800 rounded-full h-2 overflow-hidden mb-1.5">
+      <div id="uploadProgressBar" class="bg-indigo-600 h-2 rounded-full transition-all duration-200" style="width: 0%"></div>
+    </div>
+    <div class="flex items-center justify-between text-xs text-slate-400">
+      <span id="uploadToastDetail">Preparing...</span>
+      <span id="uploadToastPercent">0%</span>
+    </div>
+  </div>
+
+  <!-- Custom Scripts -->
+  <script src="/static/js/app.js"></script>
+</body>
+</html>

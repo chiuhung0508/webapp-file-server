@@ -1,0 +1,55 @@
+/* Webapp File Server Custom Styles */
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(15, 23, 42, 0.6);
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(51, 65, 85, 0.8);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(99, 102, 241, 0.8);
+}
+
+/* CodeMirror Full-Height Integration */
+.CodeMirror {
+  height: 100% !important;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace !important;
+  font-size: 14px !important;
+  line-height: 1.6 !important;
+  background-color: #0f172a !important; /* slate-900 */
+}
+
+.CodeMirror-gutters {
+  background-color: #090d16 !important;
+  border-right: 1px solid #1e293b !important;
+}
+
+.CodeMirror-linenumber {
+  color: #64748b !important;
+}
+
+.CodeMirror-cursor {
+  border-left: 2px solid #818cf8 !important;
+}
+
+.CodeMirror-selected {
+  background-color: #312e81 !important;
+}
+
+/* Smooth drag transitions */
+#dropZoneOverlay {
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+/* Mobile tap touch target adjustments */
+@media (max-width: 640px) {
+  button, input, select {
+    font-size: 16px; /* Prevents auto-zoom on iOS inputs */
+  }
+}

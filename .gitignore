@@ -218,3 +218,10 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Application specific data & certificates
+data/
+certs/*.pem
+certs/*.key
+certs/*.crt
+.DS_Store
