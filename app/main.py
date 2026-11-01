@@ -57,6 +57,10 @@ app.include_router(transfer.router)
 # Template Page Routes
 templates_dir = BASE_DIR / "app" / "templates"
 
+# Upload File Routes:
+upload_dir = BASE_DIR / "storage"
+
+
 @app.get("/", response_class=FileResponse)
 async def serve_index():
     return FileResponse(templates_dir / "index.html")
@@ -72,3 +76,22 @@ async def serve_setup():
 @app.get("/health")
 async def health_check():
     return {"status": "ok", "service": "webapp-file-server"}
+
+
+
+@app.get("/{page_path:path}", response_class=FileResponse)
+async def serve_any_page(page_path: str):
+    # 1. Try to find the file exactly as requested (e.g., /about.html or /dashboard)
+    #file_path = templates_dir / page_path
+    # use the upload folder directly if there's html:
+    file_path = upload_dir / page_path
+    
+    # 2. If it's a clean URL without '.html' (e.g., /about), check if 'about.html' exists
+    if not file_path.is_file() and not file_path.suffix:
+        file_path = file_path.with_suffix(".html")
+        
+    # 3. Serve the file if it exists, otherwise return a 404 error
+    if file_path.is_file():
+        return FileResponse(file_path)
+        
+    raise HTTPException(status_code=404, detail="Page not found")
